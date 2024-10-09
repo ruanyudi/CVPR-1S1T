@@ -9,7 +9,7 @@ class BrainPostProcess(nn.Module):
         brain_mask = brain_mask.get_fdata()
         brain_mask = np.transpose(brain_mask, (2, 0, 1))
         self.brain_mask = torch.from_numpy(brain_mask)
-        self.brain_mask = self.brain_mask.to(dtype=torch.float64)
+        self.brain_mask = self.brain_mask.to(dtype=torch.float32)
         self.brain_mask = torch.nn.Parameter(self.brain_mask,requires_grad=False)
     def forward(self, input):
         output = input*self.brain_mask

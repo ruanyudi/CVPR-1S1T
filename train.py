@@ -5,14 +5,14 @@ from tqdm import tqdm
 import numpy as np
 from ModelAPI import ModelAPI
 import time
-from T1TauDataset import T1TauDataset
+from dataset.T1TauDataset import T1TauDataset
 from torch.utils.data import DataLoader
 from torchmetrics import StructuralSimilarityIndexMeasure
-from NTXentLoss import NTXentLossBatch
-from MaxCosSimLoss import MaximizeCosineDistanceLoss
-from BrainPostProcess import BrainPostProcess
+from loss.NTXentLoss import NTXentLossBatch
+from loss.MaxCosSimLoss import MaximizeCosineDistanceLoss
+from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
-device = 'cuda'
+device = 'mps'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
@@ -73,14 +73,14 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
     
 if __name__ == '__main__':
     model = ModelAPI(91,91)
-    model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8980.pth'))
+    # model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8980.pth'))
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
     criterion = nn.L1Loss()
     trainDataset = T1TauDataset(train=True)
-    trainDataLoader = DataLoader(trainDataset,batch_size=4,shuffle=True)
+    trainDataLoader = DataLoader(trainDataset,batch_size=1,shuffle=True)
     testDataset = T1TauDataset(train=False)
-    testDataLoader = DataLoader(testDataset,batch_size=4)
+    testDataLoader = DataLoader(testDataset,batch_size=1)
     for i in range(5000):
         model.train()
         pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=False)
