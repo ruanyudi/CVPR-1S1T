@@ -5,8 +5,8 @@ from torch.utils.data import Dataset,DataLoader
 import numpy as np
 import matplotlib.pyplot as plt
 
-T1_path = './T1_PEt/T1'
-Tau_path = './T1_PEt/TauPET'
+T1_path = './data/T1_PEt/T1'
+Tau_path = './data/T1_PEt/TauPET'
 train_split=0.8
 
 
@@ -25,6 +25,7 @@ class T1TauDataset(Dataset):
             id = file.split('_')[3].split('-')[0]
             Tau_id2file.update({id:os.path.join(Tau_path,file)})
         self.index2id = list(T1_id2file.keys())
+        self.index2id = self.index2id[:10]
         self.T1_id2file = T1_id2file
         self.Tau_id2file = Tau_id2file
 

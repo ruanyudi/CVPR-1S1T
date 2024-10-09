@@ -5,7 +5,7 @@ import numpy as np
 class BrainPostProcess(nn.Module):
     def __init__(self):
         super(BrainPostProcess, self).__init__()
-        brain_mask = nibabel.load('./brainmask.nii')
+        brain_mask = nibabel.load('./dataset/brainmask.nii')
         brain_mask = brain_mask.get_fdata()
         brain_mask = np.transpose(brain_mask, (2, 0, 1))
         self.brain_mask = torch.from_numpy(brain_mask)

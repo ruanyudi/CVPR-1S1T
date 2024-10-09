@@ -250,7 +250,7 @@ class ECAFormer_onestage(nn.Module):
     def getRepresentation(self,img):
         return self.RepNet(img)
 class ECAFormer(nn.Module):
-    def __init__(self,in_channels=91, out_channels=91, n_feat=40, level=2, num_blocks=[1, 2, 2],stage=1):
+    def __init__(self,in_channels=3, out_channels=3, n_feat=40, level=2, num_blocks=[1, 2, 2],stage=1):
         super().__init__()
         modules=[]
         for i in range(stage):

@@ -13,7 +13,7 @@ from loss.MaxCosSimLoss import MaximizeCosineDistanceLoss
 from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
 device = 'mps'
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda' if torch.cuda.is_available() else 'mps'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
@@ -60,15 +60,16 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
             loss = loss+modality_consistency_loss
 
 
-        # logs.update({'cost_time':time.time()-start_time})
+        logs.update({'cost_time':time.time()-start_time})
         optimizer.zero_grad()
         loss.backward()
         if train:
             optimizer.step()
         losses.append(loss.item())
         prefix = 'Train' if train else 'Test'
-        ssims.append(ssim_metric(pred,labels).item())
-        if (iter_num+1)%50==0:
+        for batch_id in range(pred.shape[0]):
+            ssims.append(ssim_metric(pred[batch_id].unsqueeze(0), labels[batch_id].unsqueeze(0)).item())
+        if (iter_num+1)%2==0:
             print(f"{prefix}:: Epoch: {epoch} | iter{iter_num}/{len(dataloader)} | Loss: {np.mean(losses)} | SSIM: {np.mean(ssims)} \n Logs : {logs}\n")
     return np.mean(ssims)
     
@@ -79,13 +80,13 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
     criterion = nn.L1Loss()
     trainDataset = T1TauDataset(train=True)
-    trainDataLoader = DataLoader(trainDataset,batch_size=1,shuffle=True)
+    trainDataLoader = DataLoader(trainDataset,batch_size=2,shuffle=True)
     testDataset = T1TauDataset(train=False)
-    testDataLoader = DataLoader(testDataset,batch_size=1)
+    testDataLoader = DataLoader(testDataset,batch_size=2)
     for i in range(5000):
         model.train()
         pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=False)
-        if (i+1)%20==0:
+        if (i+1)%2==0:
             model.eval()
             ssim = pred_one_epoch(i,model,testDataLoader,optimizer,criterion,train=False,use_consistency=False)
             print(ssim)
