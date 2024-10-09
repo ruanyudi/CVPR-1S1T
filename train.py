@@ -13,6 +13,7 @@ from loss.MaxCosSimLoss import MaximizeCosineDistanceLoss
 from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
 device = 'mps'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
