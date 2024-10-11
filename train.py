@@ -40,7 +40,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         logs.update({'mse_loss':loss.item()})
         cr_loss = CR_loss.get_loss(pred,labels,data)
         logs.update({'CR_loss':cr_loss.item()})
-        loss+=CR_loss
+        loss+=cr_loss
         embed = lambda x : model.getEmbeddings(*x)
         if use_consistency:
             instance_y,modality_y = model.getRepresentation(labels)
