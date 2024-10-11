@@ -59,11 +59,9 @@ class T1TauDataset(Dataset):
 if __name__ == '__main__':
     dataset = T1TauDataset()
     dataloader = DataLoader(dataset,batch_size=1)
-    data = next(iter(dataloader))
-    print(data[0].shape)
-    fig,ax = plt.subplots(1,2)
-    ax[0].imshow(data[0][0][30])
-    ax[0].set_title('T1')
-    ax[1].imshow(data[1][0][30])
-    ax[1].set_title('Tau')
-    plt.show()
+    for i,(data,label) in enumerate(dataloader):
+        print(dataset.Tau_filepaths[dataset.index2id[i]])
+        print(dataset.T1_id2file[dataset.index2id[i]])
+        print(data.shape)
+        print(label.shape)
+        exit(0)
