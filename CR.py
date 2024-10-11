@@ -64,7 +64,7 @@ class ContrastLoss(nn.Module):
 
     def get_loss(self,a,p,n):
         b,c,h,w = n.shape
-        loss = []
+        losses=[]
         for batch_idx in range(b):
             a_s = []
             p_s = []
@@ -79,15 +79,15 @@ class ContrastLoss(nn.Module):
             a_s=torch.cat(a_s,0)
             p_s=torch.cat(p_s,0)
             n_s=torch.cat(n_s,0)
-            loss.append(self.forward(a_s,p_s,n_s))
-        return np.mean(loss)
+            losses.append(self.forward(a_s,p_s,n_s))
+        return torch.mean(torch.stack(losses))
 
 if __name__ == '__main__':
-    dummy_a = torch.randn((4,91,91,109))
-    dummy_p = torch.randn((4, 91, 91, 109))
-    dummy_n = torch.randn((4, 91, 91, 109))
-    loss = ContrastLoss(ablation=True).get_loss(dummy_a,dummy_p,dummy_n)
+    dummy_a = torch.randn((2,91,91,109))
+    dummy_p = torch.randn((2, 91, 91, 109))
+    dummy_n = torch.randn((2, 91, 91, 109))
+    loss = ContrastLoss(ablation=False).get_loss(dummy_a,dummy_p,dummy_n)
     print(loss)
-    loss = ContrastLoss(ablation=False).get_loss(dummy_a, dummy_p, dummy_n)
-    print(loss)
+    # loss = ContrastLoss(ablation=False).get_loss(dummy_a, dummy_p, dummy_n)
+    # print(loss)
     # print(ContrastLoss()(dummy_a,dummy_p,dummy_n))
