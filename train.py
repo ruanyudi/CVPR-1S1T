@@ -45,25 +45,9 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         if use_consistency:
             instance_y,modality_y = model.getRepresentation(labels)
             instance_yhat,modality_yhat = model.getRepresentation(pred)
-            instance_x,modality_x = embed([instance_x,modality_x])
-            instance_yhat,modality_yhat=embed([instance_yhat,modality_yhat])
-            instance_y,modality_y=embed([instance_y,modality_y])
-
-            ### instance_x instance_yhat instance_y
-            instance_consistency_loss=0
-            instance_consistency_loss += infoNceLoss(instance_x,instance_yhat)
-            instance_consistency_loss += infoNceLoss(instance_x,instance_y)
-            instance_consistency_loss += infoNceLoss(instance_y,instance_yhat)
-            instance_consistency_loss /=3.
-            logs.update({'ins_closs':instance_consistency_loss.item()})
-            loss = loss + instance_consistency_loss*0.01
-            ### modality_x modality_t modality_yhat
-            modality_consistency_loss=0
-            modality_consistency_loss+=F.mse_loss(modality_y,modality_yhat)
-            modality_consistency_loss+=MaxCosSimLoss(modality_x,modality_y)
-            modality_consistency_loss+=MaxCosSimLoss(modality_yhat,modality_x)
-            logs.update({'mod_closs':modality_consistency_loss.item()})
-            loss = loss+modality_consistency_loss
+            x_modality_label = model.DisModality(modality_x)
+            y_modality_label = model.DisModality(modality_y)
+            yhat_modality_label = model.DisModality(modality_yhat)
 
 
         logs.update({'cost_time':time.time()-start_time})
