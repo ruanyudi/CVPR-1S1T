@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from unet.unet_model import UNet
 from model.ECAFormer import ECAFormer
 from torch.nn import functional as F
 
@@ -31,17 +30,17 @@ class ModelAPI(nn.Module):
             nn.ReLU(),
             nn.Linear(128,128)
         )
-        self.model = ECAFormer(stage=1,n_feat=4, num_blocks=[1, 2, 2])
+        self.model = ECAFormer(stage=1,n_feat=128, num_blocks=[1, 2, 2],in_channels=in_channels,out_channels=out_channels)
     
     def forward(self,x):
         b,c,h,w = x.shape
-        x = F.interpolate(x,(32,32))
+        x = F.interpolate(x,(128,128))
         x,instance,modality = self.model(x)
         return F.interpolate(x,(h,w)), F.interpolate(instance,(h,w)), F.interpolate(modality,(h,w))
     
     def getRepresentation(self,x):
         b,c,h,w = x.shape
-        x = F.interpolate(x,(32,32))
+        x = F.interpolate(x,(128,128))
         instance,modality = self.model.getRepresentation(x)
         return instance, modality
 

@@ -12,6 +12,7 @@ from loss.NTXentLoss import NTXentLossBatch
 from loss.MaxCosSimLoss import MaximizeCosineDistanceLoss
 from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
+from CR import ContrastLoss
 device = 'mps'
 device = 'cuda' if torch.cuda.is_available() else 'mps'
 
@@ -21,6 +22,8 @@ infoNceLoss = NTXentLossBatch()
 MaxCosSimLoss = MaximizeCosineDistanceLoss()
 brainPostProcess = BrainPostProcess()
 brainPostProcess.to(device)
+CR_loss = ContrastLoss(ablation=True)
+CR_loss.to(device)
 
 
 def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,optimizer:torch.optim,criterion:torch.nn,train=True,use_consistency=False):
@@ -35,6 +38,9 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         pred= brainPostProcess(pred)
         loss = criterion(pred,labels)
         logs.update({'mse_loss':loss.item()})
+        cr_loss = CR_loss.get_loss(pred,labels,data)
+        logs.update({'CR_loss':cr_loss.item()})
+        loss+=CR_loss
         embed = lambda x : model.getEmbeddings(*x)
         if use_consistency:
             instance_y,modality_y = model.getRepresentation(labels)
@@ -69,7 +75,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         prefix = 'Train' if train else 'Test'
         for batch_id in range(pred.shape[0]):
             ssims.append(ssim_metric(pred[batch_id].unsqueeze(0), labels[batch_id].unsqueeze(0)).item())
-        if (iter_num+1)%2==0:
+        if (iter_num+1)%20==0:
             print(f"{prefix}:: Epoch: {epoch} | iter{iter_num}/{len(dataloader)} | Loss: {np.mean(losses)} | SSIM: {np.mean(ssims)} \n Logs : {logs}\n")
     return np.mean(ssims)
     
@@ -86,7 +92,7 @@ if __name__ == '__main__':
     for i in range(5000):
         model.train()
         pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=False)
-        if (i+1)%2==0:
+        if (i+1)%20==0:
             model.eval()
             ssim = pred_one_epoch(i,model,testDataLoader,optimizer,criterion,train=False,use_consistency=False)
             print(ssim)

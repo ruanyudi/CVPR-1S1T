@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from unet.unet_model import UNet
+from .unet.unet_model import UNet
 from einops import rearrange
 from fvcore.nn import FlopCountAnalysis
 class RepNet(nn.Module):
@@ -236,7 +236,7 @@ class CrossAttenUnet(nn.Module):
 
 
 class ECAFormer_onestage(nn.Module):
-    def __init__(self, in_channels=3, out_channels=3, n_feat=40, level=2, num_blocks=[1, 2, 2]):
+    def __init__(self, in_channels=91, out_channels=91, n_feat=40, level=2, num_blocks=[1, 2, 2]):
         super().__init__()
         self.RepNet = RepNet(in_channels)
         self.CrossAttUnet = CrossAttenUnet(in_dim=in_channels, out_dim=out_channels, dim=n_feat, level=level,
@@ -250,7 +250,7 @@ class ECAFormer_onestage(nn.Module):
     def getRepresentation(self,img):
         return self.RepNet(img)
 class ECAFormer(nn.Module):
-    def __init__(self,in_channels=3, out_channels=3, n_feat=40, level=2, num_blocks=[1, 2, 2],stage=1):
+    def __init__(self,in_channels=91, out_channels=91, n_feat=40, level=2, num_blocks=[1, 2, 2],stage=1):
         super().__init__()
         modules=[]
         for i in range(stage):
