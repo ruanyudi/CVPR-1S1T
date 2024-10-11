@@ -5,7 +5,6 @@ import torch.nn.functional as fnn
 from torch.autograd import Variable
 import numpy as np
 from torchvision import models
-import time
 
 class Vgg19(torch.nn.Module):
     def __init__(self, requires_grad=False):
@@ -32,9 +31,7 @@ class Vgg19(torch.nn.Module):
 
     def forward(self, X):
         h_relu1 = self.slice1(X)
-        print(h_relu1.shape)
         h_relu2 = self.slice2(h_relu1)
-        print(h_relu2.shape)
         h_relu3 = self.slice3(h_relu2)
         h_relu4 = self.slice4(h_relu3)
         h_relu5 = self.slice5(h_relu4)
@@ -65,12 +62,30 @@ class ContrastLoss(nn.Module):
             loss += self.weights[i] * contrastive
         return loss
 
+    def get_loss(self,a,p,n):
+        b,c,h,w = n.shape
+        loss = []
+        for batch_idx in range(b):
+            a_s = []
+            p_s = []
+            n_s = []
+            for i in range(c):
+                a_single=torch.cat([a[batch_idx,i,:,:].unsqueeze(0) for i in range(3)],0).unsqueeze(0)
+                p_single=torch.cat([p[batch_idx,i,:,:].unsqueeze(0) for i in range(3)],0).unsqueeze(0)
+                n_single=torch.cat([n[batch_idx,i,:,:].unsqueeze(0) for i in range(3)],0).unsqueeze(0)
+                a_s.append(a_single)
+                p_s.append(p_single)
+                n_s.append(n_single)
+            a_s=torch.cat(a_s,0)
+            p_s=torch.cat(p_s,0)
+            n_s=torch.cat(n_s,0)
+            loss.append(self.forward(a_s,p_s,n_s))
+        return np.mean(loss)
+
 if __name__ == '__main__':
-    dummy_x = torch.randn(1,3,91,109)
-    dummy_y = torch.randn(1,3,91,109)
-    dummy_out = torch.randn(1,3,91,109)
-    criterion = ContrastLoss(ablation=False)
-    start = time.time()
-    loss = criterion(dummy_out, dummy_y, dummy_x)
-    print(time.time() - start)
+    dummy_a = torch.randn((4,91,91,109))
+    dummy_p = torch.randn((4, 91, 91, 109))
+    dummy_n = torch.randn((4, 91, 91, 109))
+    loss = ContrastLoss().get_loss(dummy_a,dummy_p,dummy_n)
     print(loss)
+    # print(ContrastLoss()(dummy_a,dummy_p,dummy_n))
