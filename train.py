@@ -43,9 +43,9 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         if use_consistency:
             instance_y,modality_y = model.getRepresentation(labels)
             instance_yhat,modality_yhat = model.getRepresentation(pred)
-            x_modality_label = model.DisModality(modality_x)
-            y_modality_label = model.DisModality(modality_y)
-            yhat_modality_label = model.DisModality(modality_yhat)
+            x_modality_label = model.DisModality(modality_x,with_grl=False)
+            y_modality_label = model.DisModality(modality_y,with_grl=False)
+            yhat_modality_label = model.DisModality(modality_yhat,with_grl=True)
             x_mod_dis_loss = F.binary_cross_entropy_with_logits(x_modality_label,torch.zeros_like(x_modality_label))
             y_mod_dis_loss = F.binary_cross_entropy_with_logits(y_modality_label,torch.ones_like(y_modality_label))
             yhat_mod_dis_loss = F.binary_cross_entropy_with_logits(yhat_modality_label,torch.zeros_like(yhat_modality_label))

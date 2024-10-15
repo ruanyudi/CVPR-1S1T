@@ -7,7 +7,6 @@ class ModelAPI(nn.Module):
     def __init__(self,in_channels,out_channels) -> None:
         super().__init__()
         self.Dis_modality=nn.Sequential(
-            GradientReversalLayer(),
             nn.Conv2d(in_channels,in_channels,3,2,1),
             nn.ReLU(),
             nn.Conv2d(in_channels,in_channels,3,2,1),
@@ -21,6 +20,7 @@ class ModelAPI(nn.Module):
             nn.ReLU(),
             nn.Linear(128,1)
         )
+        self.grl = GradientReversalLayer()
         self.model = ECAFormer(stage=1,n_feat=128, num_blocks=[1, 2, 2],in_channels=in_channels,out_channels=out_channels)
     
     def forward(self,x):
@@ -35,5 +35,7 @@ class ModelAPI(nn.Module):
         instance,modality = self.model.getRepresentation(x)
         return instance, modality
 
-    def DisModality(self,x):
+    def DisModality(self,x,with_grl=True):
+        if with_grl:
+            x = self.grl(x)
         return self.Dis_modality(x)
