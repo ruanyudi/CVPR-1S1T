@@ -27,7 +27,7 @@ class ModelAPI(nn.Module):
         b,c,h,w = x.shape
         x = F.interpolate(x,(128,128))
         x,instance,modality = self.model(x)
-        return F.interpolate(x,(h,w)), F.interpolate(instance,(h,w)), F.interpolate(modality,(h,w))
+        return F.interpolate(x,(h,w)), instance, modality
     
     def getRepresentation(self,x):
         b,c,h,w = x.shape

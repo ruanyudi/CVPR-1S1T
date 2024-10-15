@@ -13,8 +13,7 @@ from loss.MaxCosSimLoss import MaximizeCosineDistanceLoss
 from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
 from CR import ContrastLoss
-device = 'mps'
-device = 'cuda' if torch.cuda.is_available() else 'mps'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
@@ -35,7 +34,6 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         start_time = time.time()
         data,labels = data.to(device),labels.to(device)
         pred,instance_x,modality_x = model(data)
-        pred= brainPostProcess(pred)
         loss = criterion(pred,labels)
         logs.update({'mse_loss':loss.item()})
         cr_loss = CR_loss.get_loss(pred,labels,data)
@@ -48,7 +46,23 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
             x_modality_label = model.DisModality(modality_x)
             y_modality_label = model.DisModality(modality_y)
             yhat_modality_label = model.DisModality(modality_yhat)
-
+            x_mod_dis_loss = F.binary_cross_entropy_with_logits(x_modality_label,torch.zeros_like(x_modality_label))
+            y_mod_dis_loss = F.binary_cross_entropy_with_logits(y_modality_label,torch.ones_like(y_modality_label))
+            yhat_mod_dis_loss = F.binary_cross_entropy_with_logits(yhat_modality_label,torch.zeros_like(yhat_modality_label))
+            logs.update({'dis_x':x_mod_dis_loss.item()})
+            logs.update({'dis_y':y_mod_dis_loss.item()})
+            logs.update({'dis_yhat':yhat_mod_dis_loss.item()})
+            loss+=x_mod_dis_loss*0.05
+            loss+=y_mod_dis_loss*0.1
+            loss+=yhat_mod_dis_loss*0.05
+            
+            ins_con_loss = torch.tensor([0.])
+            ins_con_loss = F.mse_loss(instance_x,instance_y)
+            ins_con_loss = F.mse_loss(instance_y,instance_yhat)
+            ins_con_loss = F.mse_loss(instance_x,instance_yhat)
+            ins_con_loss/=3.
+            logs.update({'ins_con_loss':ins_con_loss.item()})
+            loss+=ins_con_loss
 
         logs.update({'cost_time':time.time()-start_time})
         optimizer.zero_grad()
@@ -57,6 +71,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
             optimizer.step()
         losses.append(loss.item())
         prefix = 'Train' if train else 'Test'
+        pred= brainPostProcess(pred)
         for batch_id in range(pred.shape[0]):
             ssims.append(ssim_metric(pred[batch_id].unsqueeze(0), labels[batch_id].unsqueeze(0)).item())
         if (iter_num+1)%20==0:
@@ -65,7 +80,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
     
 if __name__ == '__main__':
     model = ModelAPI(91,91)
-    # model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8980.pth'))
+    #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8621.pth'))
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
     criterion = nn.L1Loss()
@@ -75,7 +90,7 @@ if __name__ == '__main__':
     testDataLoader = DataLoader(testDataset,batch_size=2)
     for i in range(5000):
         model.train()
-        pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=False)
+        pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=True)
         if (i+1)%20==0:
             model.eval()
             ssim = pred_one_epoch(i,model,testDataLoader,optimizer,criterion,train=False,use_consistency=False)
