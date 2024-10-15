@@ -1,4 +1,5 @@
 import torch
+import matplotlib.pyplot as plt
 from torch import nn
 import torch.utils
 from tqdm import tqdm
@@ -14,6 +15,7 @@ from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
 from CR import ContrastLoss
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
@@ -39,7 +41,6 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         cr_loss = CR_loss.get_loss(pred,labels,data)
         logs.update({'CR_loss':cr_loss.item()})
         loss+=cr_loss
-        embed = lambda x : model.getEmbeddings(*x)
         if use_consistency:
             instance_y,modality_y = model.getRepresentation(labels)
             instance_yhat,modality_yhat = model.getRepresentation(pred)
