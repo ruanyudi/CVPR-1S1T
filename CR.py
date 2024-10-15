@@ -82,6 +82,17 @@ class ContrastLoss(nn.Module):
             losses.append(self.forward(a_s,p_s,n_s))
         return torch.mean(torch.stack(losses))
 
+    def get_loss_multiview(self,a,p,n):
+        losses = []
+        #c_view
+        losses.append(self.get_loss(a,p,n))
+        #h_view
+        losses.append(self.get_loss(a.permute(0,2,1,3),p.permute(0,2,1,3),n.permute(0,2,1,3)))
+        #w_view
+        losses.append(self.get_loss(a.permute(0,3,1,2),p.permute(0,3,1,2),n.permute(0,3,1,2)))
+        return torch.mean(torch.stack(losses))
+    
+
 if __name__ == '__main__':
     dummy_a = torch.randn((2,91,91,109))
     dummy_p = torch.randn((2, 91, 91, 109))
