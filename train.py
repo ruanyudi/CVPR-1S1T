@@ -1,4 +1,5 @@
 import torch
+from config import Config
 import matplotlib.pyplot as plt
 from torch import nn
 import torch.utils
@@ -79,14 +80,15 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
     return np.mean(ssims)
     
 if __name__ == '__main__':
+    opt =Config()
     model = ModelAPI(91,91)
     #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8158.pth'))
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
     criterion = nn.L1Loss()
-    trainDataset = T1TauDataset(train=True)
+    trainDataset = opt.dataset(train=True)
     trainDataLoader = DataLoader(trainDataset,batch_size=2,shuffle=True)
-    testDataset = T1TauDataset(train=False)
+    testDataset = opt.dataset(train=False)
     testDataLoader = DataLoader(testDataset,batch_size=1)
     for i in range(5000):
         model.train()

@@ -1,4 +1,5 @@
 from time import sleep
+from config import Config
 from dataset.T1TauDataset import T1TauDataset
 from ModelAPI import ModelAPI
 import torch
@@ -30,11 +31,12 @@ def display_imgs(img0,img1,img2,img3,img4):
 
 
 if __name__ == '__main__':
+    opt = Config()
     model = ModelAPI(CHANNEL_SIZE,CHANNEL_SIZE)
     model.load_state_dict(torch.load('./weights/eca_ssim0.8158.pth'))
     model.to(DEVICE)
     model.eval()
-    dataset = T1TauDataset(train=False)
+    dataset = opt.dataset(train=False)
     dataloader = DataLoader(dataset,batch_size=1,shuffle=False)
     ssims = []
     dataloader = tqdm(dataloader)
