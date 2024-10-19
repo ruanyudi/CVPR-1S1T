@@ -15,7 +15,6 @@ from dataset.BrainPostProcess import BrainPostProcess
 import torch.nn.functional as F
 from CR import ContrastLoss
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = 'cpu'
 
 ssim_metric = StructuralSimilarityIndexMeasure()
 ssim_metric.to(device)
@@ -37,7 +36,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         data,labels = data.to(device),labels.to(device)
         pred,instance_x,modality_x = model(data)
         loss = criterion(pred,labels)
-        logs.update({'mse_loss':loss.item()})
+        logs.update({'l1_loss':loss.item()})
         cr_loss = CR_loss.get_loss(pred,labels,data)
         logs.update({'CR_loss':cr_loss.item()})
         loss+=cr_loss
@@ -53,17 +52,17 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
             logs.update({'dis_x':x_mod_dis_loss.item()})
             logs.update({'dis_y':y_mod_dis_loss.item()})
             logs.update({'dis_yhat':yhat_mod_dis_loss.item()})
-            loss+=x_mod_dis_loss*0.05
-            loss+=y_mod_dis_loss*0.1
-            loss+=yhat_mod_dis_loss*0.05
+            loss+=x_mod_dis_loss*0.005
+            loss+=y_mod_dis_loss*0.005
+            loss+=yhat_mod_dis_loss*0.001
             
-            ins_con_loss = torch.tensor([0.])
-            ins_con_loss = F.mse_loss(instance_x,instance_y)
-            ins_con_loss = F.mse_loss(instance_y,instance_yhat)
-            ins_con_loss = F.mse_loss(instance_x,instance_yhat)
+            ins_con_loss = torch.tensor(0.,device=device)
+            ins_con_loss += infoNceLoss(instance_x.flatten(1),instance_y.flatten(1))
+            ins_con_loss += infoNceLoss(instance_y.flatten(1),instance_yhat.flatten(1))
+            ins_con_loss += infoNceLoss(instance_x.flatten(1),instance_yhat.flatten(1))
             ins_con_loss/=3.
             logs.update({'ins_con_loss':ins_con_loss.item()})
-            loss+=ins_con_loss
+            loss+=ins_con_loss*0.01
 
         logs.update({'cost_time':time.time()-start_time})
         optimizer.zero_grad()
@@ -81,14 +80,14 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
     
 if __name__ == '__main__':
     model = ModelAPI(91,91)
-    #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8621.pth'))
+    #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8158.pth'))
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
     criterion = nn.L1Loss()
     trainDataset = T1TauDataset(train=True)
     trainDataLoader = DataLoader(trainDataset,batch_size=2,shuffle=True)
     testDataset = T1TauDataset(train=False)
-    testDataLoader = DataLoader(testDataset,batch_size=2)
+    testDataLoader = DataLoader(testDataset,batch_size=1)
     for i in range(5000):
         model.train()
         pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=True)

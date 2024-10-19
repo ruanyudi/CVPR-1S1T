@@ -31,7 +31,7 @@ def display_imgs(img0,img1,img2,img3,img4):
 
 if __name__ == '__main__':
     model = ModelAPI(CHANNEL_SIZE,CHANNEL_SIZE)
-    model.load_state_dict(torch.load('./weights/eca_ssim0.8028.pth'))
+    model.load_state_dict(torch.load('./weights/eca_ssim0.8158.pth'))
     model.to(DEVICE)
     model.eval()
     dataset = T1TauDataset(train=False)
