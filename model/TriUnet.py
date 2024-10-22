@@ -12,6 +12,7 @@ class RepNet(nn.Module):
         self.ModalityNet = UNet(n_channels)
         self.InstanceNet = UNet(n_channels)
 
+
     def forward(self, img):
         Modality = self.ModalityNet(img)
         Instance = self.InstanceNet(img)
@@ -19,12 +20,23 @@ class RepNet(nn.Module):
 
 class TriUnet(nn.Module):
     def __init__(self,in_channels=91):
+        super().__init__()
+        self.dim=in_channels
         self.RepNet = RepNet(n_channels=in_channels)
         self.MixNet = UNet(in_channels*2)
+        self.mapping = nn.Sequential(
+            nn.Conv2d(self.dim * 2, self.dim*2, 3, 1, 1, bias=True),
+            nn.LeakyReLU(negative_slope=0.01, inplace=True),
+            nn.Conv2d(self.dim * 2, self.dim*2, 3, 1, 1, bias=True),
+            nn.LeakyReLU(negative_slope=0.01, inplace=True),
+            nn.Conv2d(self.dim * 2, self.dim, 3, 1, 1, bias=True),
+            nn.LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+
 
     def forward(self,x):
         instance,modality = self.RepNet(x)
-        return self.MixNet(torch.cat((instance,modality),dim=1))
+        return self.mapping(self.MixNet(torch.cat((instance,modality),dim=1))),instance,modality
 
     def getRepresentation(self, x):
         return self.RepNet(x)

@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from model.TriUnet import TriUnet
 from model.ECAFormer import ECAFormer
 from torch.nn import functional as F
 from GRL import GradientReversalLayer
@@ -21,8 +22,8 @@ class ModelAPI(nn.Module):
             nn.Linear(128,1)
         )
         self.grl = GradientReversalLayer()
-        self.model = ECAFormer(stage=1,n_feat=128, num_blocks=[1, 2, 2],in_channels=in_channels,out_channels=out_channels)
-    
+        #self.model = ECAFormer(stage=1,n_feat=128, num_blocks=[1, 2, 2],in_channels=in_channels,out_channels=out_channels)
+        self.model = TriUnet(in_channels)
     def forward(self,x):
         b,c,h,w = x.shape
         x = F.interpolate(x,(128,128))

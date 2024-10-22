@@ -84,7 +84,7 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
 if __name__ == '__main__':
     opt =Config()
     model = ModelAPI(91,91)
-    model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssimnan.pth'))
+    #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssimnan.pth'))
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(),lr=0.001)
     criterion = nn.L1Loss()
