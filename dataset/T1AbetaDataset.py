@@ -25,7 +25,7 @@ class T1ABetaDataset(Dataset):
             id = file.split('_')[3].split('-')[0]
             ABeta_id2file.update({id: os.path.join(ABeta_path, file)})
         self.index2id = list(T1_id2file.keys())
-        # self.index2id = self.index2id[:10]
+        #self.index2id = self.index2id[:10]
         self.T1_id2file = T1_id2file
         self.ABeta_id2file = ABeta_id2file
 

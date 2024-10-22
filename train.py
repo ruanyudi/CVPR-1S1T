@@ -75,6 +75,8 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
         pred= brainPostProcess(pred)
         for batch_id in range(pred.shape[0]):
             ssims.append(ssim_metric(pred[batch_id].unsqueeze(0), labels[batch_id].unsqueeze(0)).item())
+            if train==False:
+                print(np.mean(ssims))
         if (iter_num+1)%20==0:
             print(f"{prefix}:: Epoch: {epoch} | iter{iter_num}/{len(dataloader)} | Loss: {np.mean(losses)} | SSIM: {np.mean(ssims)} \n Logs : {logs}\n")
     return np.mean(ssims)
@@ -82,9 +84,9 @@ def pred_one_epoch(epoch,model:nn.Module,dataloader:torch.utils.data.DataLoader,
 if __name__ == '__main__':
     opt =Config()
     model = ModelAPI(91,91)
-    #model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssim0.8158.pth'))
+    model.load_state_dict(torch.load('/home/cavin/workspace/PetTauCVPR/weights/eca_ssimnan.pth'))
     model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
+    optimizer = torch.optim.SGD(model.parameters(),lr=0.001)
     criterion = nn.L1Loss()
     trainDataset = opt.dataset(train=True)
     trainDataLoader = DataLoader(trainDataset,batch_size=2,shuffle=True)
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     testDataLoader = DataLoader(testDataset,batch_size=1)
     for i in range(5000):
         model.train()
-        pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=True)
+        pred_one_epoch(i,model,trainDataLoader,optimizer,criterion,use_consistency=opt.use_consistency)
         if (i+1)%20==0:
             model.eval()
             ssim = pred_one_epoch(i,model,testDataLoader,optimizer,criterion,train=False,use_consistency=False)

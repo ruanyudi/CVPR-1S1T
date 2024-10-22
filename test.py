@@ -33,7 +33,7 @@ def display_imgs(img0,img1,img2,img3,img4):
 if __name__ == '__main__':
     opt = Config()
     model = ModelAPI(CHANNEL_SIZE,CHANNEL_SIZE)
-    model.load_state_dict(torch.load('./weights/eca_ssim0.8158.pth'))
+    model.load_state_dict(torch.load('./weights/eca_ssim0.8759.pth'))
     model.to(DEVICE)
     model.eval()
     dataset = opt.dataset(train=False)
@@ -47,6 +47,9 @@ if __name__ == '__main__':
         pred = brainPostProcess(pred)
         for batch_id in range(pred.shape[0]):
             ssims.append(SSIM(pred[batch_id].unsqueeze(0),labels[batch_id].unsqueeze(0)).item())
+        if np.isnan(np.mean(ssims)):
+            print(f"detected nan : {i}")
+            print(dataset.ABeta_id2file[dataset.index2id[i]])
         pred=pred.squeeze().cpu().detach().numpy()
         nii_image = nibabel.Nifti1Image(pred.transpose(1,2,0),affine=np.eye(4))
         nibabel.save(nii_image,f'./results/{i}.nii')

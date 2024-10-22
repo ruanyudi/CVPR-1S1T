@@ -5,4 +5,5 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    dataset = T1TauDataset
+    dataset = T1ABetaDataset
+    use_consistency=False
