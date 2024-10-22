@@ -264,7 +264,6 @@ class ECAFormer(nn.Module):
     def getRepresentation(self,x):
         return self.body[0].getRepresentation(x)
 
-
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = ECAFormer(stage=1,n_feat=91, num_blocks=[1, 2, 2]).to(device)
